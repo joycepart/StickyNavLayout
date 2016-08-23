@@ -1,5 +1,5 @@
 # StickyNavLayout
-对张鸿洋的Android-StickyNavLayout进行的优化。
+平民化代码解读张鸿洋的Android-StickyNavLayout。
 
 ![效果图](https://github.com/hongyangAndroid/Android-StickyNavLayout/raw/master/sc.gif)
 
