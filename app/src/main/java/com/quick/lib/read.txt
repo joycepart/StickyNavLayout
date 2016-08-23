@@ -1,0 +1,63 @@
+down: viewgroup的dispatchTouchEvent
+
+if (disallowIntercept || !onInterceptTouchEvent(ev)) {
+
+}
+	1、当前不允许拦截，即disallowIntercept =true，
+	2、当前允许拦截但是不拦截，即disallowIntercept =false,但是onInterceptTouchEvent(ev)返回false ;
+	注：disallowIntercept 可以通过viewGroup.requestDisallowInterceptTouchEvent(boolean);进行设置
+	，特别注意一点，每次cancel或者up时，disallowIntercept都会被重置为false.
+	；而onInterceptTouchEvent(ev)可以进行复写。
+disallowIntercept默认是false,onInterceptTouchEvent(ev)默认也是false
+
+所以去查找子view有没有能消费事件的
+如果找到（子view的dispatchTouchEvent(ev)return true 表示找到了）。
+本次ViewGroup的disallowIntercept直接return true;
+move:viewgroup的dispatchTouchEvent
+ if (!disallowIntercept && onInterceptTouchEvent(ev)) { //默认为false
+    执行target.dispathTouchEvent(ev);
+    target = null;
+    return true;
+ }else{
+    return target.dispathTouchEvent(ev);
+ }
+
+up:如果在move时拦截了target，则 return viewgroup的super.dispatchTouchEvent(ev);
+如果在move时没拦截target,则 return target.dispatchTouchEvent(ev);
+
+
+
+如果没找到。事件都return viewgroup的super.dispatchTouchEvent(ev);
+即View的dispatchTouchEvent();
+
+ public boolean dispatchTouchEvent(MotionEvent event) {
+        if (mOnTouchListener != null && (mViewFlags & ENABLED_MASK) == ENABLED &&
+                mOnTouchListener.onTouch(this, event)) {
+            return true;
+        }
+        return onTouchEvent(event);
+}
+
+
+
+
+ViewGroup的onInterceptTouchEvent()触发时机：
+1，down事件,且ViewGroup的disallowIntercept为false
+2，move和up：在子View中找到了事件消费者，且ViewGroup的disallowIntercept为false
+
+
+ViewGroup的onTouchEvent()触发时机：
+1，down时在子view中找到事件消费者且在move时拦截了，在up事件会触发
+2，没找到事件消费者，事件都触发
+
+
+如果该ViewGroup的onInterceptTouchEvent()在接收到down事件处理完成之后return true，
+那么后续的move, up等事件将不再传递给onInterceptTouchEvent()
+
+
+如果最终需要处理事件的view 的onTouchEvent()返回了true，
+那么后续事件将可以继续传递给该view的onTouchEvent()处理。
+
+
+dispatchTouchEvent()返回true，后续事件（ACTION_MOVE、ACTION_UP）会再传递，
+如果返回false，dispatchTouchEvent()就接收不到ACTION_UP、ACTION_MOVE。
